@@ -1,0 +1,43 @@
+name: pulumi-yaml-project
+runtime: yaml
+description: yaml project
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-yaml
+resources:
+  myVpc:
+    type: aws:ec2:Vpc
+    name: my_vpc
+    properties:
+      cidrBlock: 172.16.0.0/16
+      tags:
+        Name: tf-example
+  mySubnet:
+    type: aws:ec2:Subnet
+    name: my_subnet
+    properties:
+      vpcId: ${myVpc.id}
+      cidrBlock: 172.16.10.0/24
+      availabilityZone: us-west-2a
+      tags:
+        Name: tf-example
+  foo:
+    type: aws:ec2:NetworkInterface
+    properties:
+      subnetId: ${mySubnet.id}
+      privateIps:
+        - 172.16.10.100
+      tags:
+        Name: primary_network_interface
+  fooInstance:
+    type: aws:ec2:Instance
+    name: foo
+    properties:
+      ami: ami-005e54dee72cc1d00
+      instanceType: t2.micro
+      networkInterfaces:
+        - networkInterfaceId: ${foo.id}
+          deviceIndex: 0
+      creditSpecification:
+        cpuCredits: unlimited

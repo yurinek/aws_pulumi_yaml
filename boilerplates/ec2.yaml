@@ -1,0 +1,48 @@
+name: pulumi-yaml-project
+runtime: yaml
+description: yaml project
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-yaml
+variables:
+  current_stack: ${pulumi.stack}
+resources:
+  myVpc:
+    type: aws:ec2:Vpc
+    name: myvpc
+    properties:
+      cidrBlock: 172.16.0.0/16
+      tags:
+        # config namespace defaults to project name
+        Name: "vpc-${pulumi-yaml-project:customer}-${current_stack}"
+  mySubnet:
+    type: aws:ec2:Subnet
+    name: my_subnet
+    properties:
+      vpcId: ${myVpc.id}
+      cidrBlock: 172.16.10.0/24
+      availabilityZone: "${aws:region}a"
+      tags:
+        Name: "subnet-${pulumi-yaml-project:customer}-${current_stack}"
+  foo:
+    type: aws:ec2:NetworkInterface
+    properties:
+      subnetId: ${mySubnet.id}
+      privateIps:
+        - 172.16.10.100
+      tags:
+        Name: "ni-${pulumi-yaml-project:customer}-${current_stack}"
+  fooInstance:
+    type: aws:ec2:Instance
+    name: foo
+    properties:
+      ami: ${pulumi-yaml-project:ami}
+      instanceType: t2.micro
+      networkInterfaces:
+        - networkInterfaceId: ${foo.id}
+          deviceIndex: 0
+      creditSpecification:
+        cpuCredits: unlimited
+      tags:
+        Name: "vm-${pulumi-yaml-project:customer}-${current_stack}"
